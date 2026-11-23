@@ -30,7 +30,7 @@
                         <span class="chip">NIS {{ $santri->nis }}</span>
                         <span class="chip">{{ $santri->kelas ?: 'Kelas belum diisi' }}</span>
                         <span class="chip">Kamar {{ $santri->kamar ?: '-' }}</span>
-                        <span class="lencana {{ $warna }}">{{ $surat->tingkat_peringatan }}</span>
+                        @include('partials.tingkat', ['tingkat' => $surat->tingkat_peringatan])
                     </div>
                 </div>
             </div>

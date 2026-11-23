@@ -8,6 +8,8 @@
         $ubah = isset($tazir);
         $statusAwal = old('status_pelaksanaan', $tazir->status_pelaksanaan ?? 'menunggu');
         $labelStatus = ['menunggu' => 'Menunggu', 'berjalan' => 'Berjalan', 'selesai' => 'Selesai'][$statusAwal] ?? 'Menunggu';
+        $idPelanggaran = old('id_pelanggaran', $tazir->id_pelanggaran ?? ($pilihan ?? ''));
+        $pelanggaranTerpilih = $pelanggaran->firstWhere('id_pelanggaran', $idPelanggaran);
     @endphp
     <div class="form-layout">
         <form class="kartu kartu-isi formulir" method="POST" action="{{ $ubah ? route('tazir.update', $tazir) : route('tazir.store') }}">
@@ -16,15 +18,38 @@
 
             <div class="bagian-form">
                 <h3>Pelanggaran</h3>
-                <label class="form-label" for="id_pelanggaran">Santri dan kategori</label>
-                <select class="form-select" id="id_pelanggaran" name="id_pelanggaran" required>
-                    <option value="">Pilih pelanggaran</option>
+                <label class="form-label" for="cariPelanggaran">Santri dan kategori</label>
+                <div class="dropdown position-relative" id="pencarianPelanggaran">
+                    <input
+                        class="form-control"
+                        id="cariPelanggaran"
+                        type="text"
+                        value="{{ $pelanggaranTerpilih ? $pelanggaranTerpilih->tanggal_pelanggaran->format('d/m/Y').' · '.$pelanggaranTerpilih->santri->nama_santri.' · '.$pelanggaranTerpilih->kategori->nama_pelanggaran : '' }}"
+                        placeholder="Ketik nama santri untuk mencari pelanggaran"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded="false"
+                        aria-controls="daftarPelanggaran"
+                        required
+                    >
+                    <input type="hidden" id="id_pelanggaran" name="id_pelanggaran" value="{{ $pelanggaranTerpilih?->id_pelanggaran ?? '' }}">
+                    <div class="dropdown-menu w-100 autocomplete-hasil" id="daftarPelanggaran" role="listbox">
                     @foreach($pelanggaran as $item)
-                        <option value="{{ $item->id_pelanggaran }}" data-nama="{{ $item->santri->nama_santri }}" data-kategori="{{ $item->kategori->nama_pelanggaran }}" @selected(old('id_pelanggaran', $tazir->id_pelanggaran ?? ($pilihan ?? '')) == $item->id_pelanggaran)>
-                            {{ $item->tanggal_pelanggaran->format('d/m/Y') }} · {{ $item->santri->nama_santri }} · {{ $item->kategori->nama_pelanggaran }}
-                        </option>
+                        <button
+                            class="dropdown-item"
+                            type="button"
+                            role="option"
+                            data-id="{{ $item->id_pelanggaran }}"
+                            data-label="{{ $item->tanggal_pelanggaran->format('d/m/Y') }} · {{ $item->santri->nama_santri }} · {{ $item->kategori->nama_pelanggaran }}"
+                            data-nama="{{ $item->santri->nama_santri }}"
+                            data-kategori="{{ $item->kategori->nama_pelanggaran }}"
+                            data-search="{{ $item->tanggal_pelanggaran->format('d/m/Y') }} {{ $item->santri->nama_santri }} {{ $item->kategori->nama_pelanggaran }}"
+                        >{{ $item->tanggal_pelanggaran->format('d/m/Y') }} · {{ $item->santri->nama_santri }} · {{ $item->kategori->nama_pelanggaran }}</button>
                     @endforeach
-                </select>
+                        <div class="dropdown-item text-muted" id="pelanggaranTidakDitemukan" hidden>Tidak ada pelanggaran yang cocok.</div>
+                    </div>
+                </div>
             </div>
 
             <div class="bagian-form">
@@ -73,10 +98,72 @@
 
 @push('scripts')
 <script>
+    const pencarianPelanggaran = document.getElementById('pencarianPelanggaran');
+    const cariPelanggaran = document.getElementById('cariPelanggaran');
+    const idPelanggaran = document.getElementById('id_pelanggaran');
+    const daftarPelanggaran = document.getElementById('daftarPelanggaran');
+    const opsiPelanggaran = Array.from(daftarPelanggaran.querySelectorAll('[data-id]'));
+    const pelanggaranTidakDitemukan = document.getElementById('pelanggaranTidakDitemukan');
+
+    const tutupDaftarPelanggaran = () => {
+        daftarPelanggaran.classList.remove('show');
+        cariPelanggaran.setAttribute('aria-expanded', 'false');
+    };
+
+    const tampilkanPelanggaran = () => {
+        const kataKunci = cariPelanggaran.value.trim().toLocaleLowerCase('id');
+        opsiPelanggaran.forEach((opsi) => {
+            opsi.hidden = !opsi.dataset.search.toLocaleLowerCase('id').includes(kataKunci);
+        });
+        pelanggaranTidakDitemukan.hidden = opsiPelanggaran.some((opsi) => !opsi.hidden);
+        daftarPelanggaran.classList.add('show');
+        cariPelanggaran.setAttribute('aria-expanded', 'true');
+    };
+
+    cariPelanggaran.addEventListener('focus', tampilkanPelanggaran);
+    cariPelanggaran.addEventListener('input', () => {
+        idPelanggaran.value = '';
+        cariPelanggaran.setCustomValidity('');
+        tampilkanPelanggaran();
+        segar();
+    });
+
+    opsiPelanggaran.forEach((opsi) => {
+        opsi.addEventListener('click', () => {
+            cariPelanggaran.value = opsi.dataset.label;
+            idPelanggaran.value = opsi.dataset.id;
+            cariPelanggaran.setCustomValidity('');
+            tutupDaftarPelanggaran();
+            segar();
+        });
+    });
+
+    cariPelanggaran.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            tutupDaftarPelanggaran();
+        } else if (event.key === 'ArrowDown') {
+            const opsiTerlihat = opsiPelanggaran.find((opsi) => !opsi.hidden);
+            if (opsiTerlihat) {
+                event.preventDefault();
+                opsiTerlihat.focus();
+            }
+        }
+    });
+
+    pencarianPelanggaran.addEventListener('focusout', (event) => {
+        if (!pencarianPelanggaran.contains(event.relatedTarget)) tutupDaftarPelanggaran();
+    });
+
+    pencarianPelanggaran.closest('form').addEventListener('submit', (event) => {
+        if (idPelanggaran.value) return;
+        event.preventDefault();
+        cariPelanggaran.setCustomValidity('Pilih catatan pelanggaran dari daftar yang muncul.');
+        cariPelanggaran.reportValidity();
+    });
+
     const isi = (id, teks) => { document.getElementById(id).textContent = teks; };
     const segar = () => {
-        const pilih = document.getElementById('id_pelanggaran');
-        const opsi = pilih.selectedOptions[0];
+        const opsi = opsiPelanggaran.find((item) => item.dataset.id === idPelanggaran.value);
         const nama = opsi?.dataset.nama || '';
         const jenis = document.getElementById('jenis_tazir').value.trim();
         const ket = document.getElementById('keterangan').value.trim();
@@ -88,7 +175,7 @@
         document.getElementById('pratinjau-status').className = 'lencana ' + status.value;
         isi('pratinjau-ket', ket || 'Keterangan pelaksanaan muncul di sini.');
     };
-    ['id_pelanggaran', 'jenis_tazir', 'status_pelaksanaan', 'keterangan'].forEach((id) => {
+    ['jenis_tazir', 'status_pelaksanaan', 'keterangan'].forEach((id) => {
         document.getElementById(id).addEventListener('input', segar);
         document.getElementById(id).addEventListener('change', segar);
     });

@@ -5,8 +5,10 @@
 
 @section('aksi')
     <a class="btn-putih" href="{{ route('pelanggaran.index') }}">Kembali</a>
-    @if(auth()->user()->petugas())
+    @if(auth()->user()->admin())
         <a class="btn-putih" href="{{ route('pelanggaran.edit', $pelanggaran) }}">Ubah</a>
+    @endif
+    @if(auth()->user()->petugas())
         <a class="btn-hijau" href="{{ route('tazir.create', ['pelanggaran' => $pelanggaran->id_pelanggaran]) }}">Catat ta'zir</a>
     @endif
 @endsection

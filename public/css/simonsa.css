@@ -17,6 +17,8 @@
 
 * { box-sizing: border-box; }
 html, body { min-height: 100%; }
+.autocomplete-hasil { max-height: 16rem; overflow-y: auto; }
+.autocomplete-hasil [hidden] { display: none; }
 body {
     margin: 0;
     font-family: "Segoe UI", "Trebuchet MS", sans-serif;
@@ -369,6 +371,7 @@ label.form-label { font-weight: 650; font-size: 14px; }
 .lencana.sp2 { background: #ffe8d6; color: #9a4512; }
 .lencana.sp3 { background: #fde8e6; color: #b42318; }
 .lencana.hitam { background: var(--hitam); color: white; }
+.tingkat-berurutan { display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: middle; }
 .kolom-no { width: 52px; color: var(--redup); }
 .orang {
     display: flex;
@@ -385,6 +388,30 @@ label.form-label { font-weight: 650; font-size: 14px; }
 .tabel-santri tbody tr:hover { background: #f7fbf8; }
 .tabel-santri td:nth-child(3),
 .tabel-santri td:nth-child(4) { white-space: nowrap; }
+.laporan-santri .kategori-ringkas {
+    display: block;
+    margin-top: 4px;
+    color: var(--redup);
+    font-size: 12px;
+    white-space: normal;
+}
+.daftar-pelanggaran-cell { min-width: 660px; white-space: normal !important; }
+.daftar-pelanggaran { width: 100%; min-width: 640px; border-collapse: collapse; }
+.daftar-pelanggaran th {
+    padding: 6px 8px;
+    background: #f3faf6;
+    color: var(--hijau-gelap);
+    font-size: 11px;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.tabel-santri .daftar-pelanggaran td {
+    padding: 8px;
+    border-top: 1px solid var(--garis);
+    white-space: normal;
+}
+.daftar-pelanggaran td:first-child { white-space: nowrap; }
 .poin-sel { display: flex; align-items: center; gap: 8px; }
 .poin-angka { font-size: 16px; min-width: 28px; }
 .poin-angka.aman { color: var(--hijau-gelap); }

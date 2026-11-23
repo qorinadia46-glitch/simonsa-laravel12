@@ -50,11 +50,19 @@ Otomatis setiap hari pukul {{ $jadwal }} WIB
     <form class="kartu kartu-isi" method="POST" action="{{ route('backup.pulihkan') }}" enctype="multipart/form-data">
         @csrf
         <h2 class="h5">Pulihkan database</h2>
-        <p class="text-secondary">Unggah berkas .sqlite hasil backup. Salinan database saat ini disimpan dulu sebelum dipulihkan. Anda akan diminta masuk kembali.</p>
+        @if(DB::getDriverName() === 'sqlite')
+            <p class="text-secondary">Unggah berkas .sqlite hasil backup. Salinan database saat ini disimpan dulu sebelum dipulihkan. Anda akan diminta masuk kembali.</p>
+        @else
+            <p class="text-secondary">Unggah berkas .sql hasil backup. Salinan database saat ini disimpan dulu sebelum dipulihkan. Anda akan diminta masuk kembali.</p>
+        @endif
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Berkas backup</label>
-                <input class="form-control" type="file" name="berkas" accept=".sqlite,.db" required>
+                @if(DB::getDriverName() === 'sqlite')
+                    <input class="form-control" type="file" name="berkas" accept=".sqlite,.db" required>
+                @else
+                    <input class="form-control" type="file" name="berkas" accept=".sql" required>
+                @endif
             </div>
             <div class="col-md-4">
                 <label class="form-label">Ketik PULIHKAN</label>

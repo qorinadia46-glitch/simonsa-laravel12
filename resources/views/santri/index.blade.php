@@ -5,7 +5,13 @@
 
 @section('aksi')
     @if(auth()->user()->admin())
-        <a class="btn-hijau" href="{{ route('santri.create') }}"><i class="bi bi-plus-lg"></i> Tambah santri</a>
+        <a class="btn-hijau" href="{{ route('santri.import.form') }}">
+            <i class="bi bi-file-earmark-excel"></i> Import Excel
+        </a>
+
+        <a class="btn-hijau" href="{{ route('santri.create') }}">
+            <i class="bi bi-plus-lg"></i> Tambah santri
+        </a>
     @endif
 @endsection
 

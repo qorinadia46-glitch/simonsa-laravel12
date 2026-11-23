@@ -124,12 +124,19 @@
                     <table class="table">
                         <thead><tr><th>Tanggal</th><th>Santri</th><th>Pelanggaran</th><th>Poin</th></tr></thead>
                         <tbody>
-                        @forelse($terbaru as $item)
+                        @forelse($terbaru as $catatan)
+                            @php
+                                $terakhir = $catatan->first();
+                                $kategoriRingkas = $catatan->pluck('kategori.nama_pelanggaran')->filter()->unique()->values();
+                            @endphp
                             <tr>
-                                <td>{{ $item->tanggal_pelanggaran->translatedFormat('d M Y') }}</td>
-                                <td>{{ $item->santri->nama_santri }}</td>
-                                <td>{{ $item->kategori->nama_pelanggaran }}</td>
-                                <td>{{ $item->poin_pelanggaran }}</td>
+                                <td>{{ $terakhir->tanggal_pelanggaran->translatedFormat('d M Y') }}</td>
+                                <td><a href="{{ route('santri.show', $terakhir->santri) }}">{{ $terakhir->santri->nama_santri }}</a></td>
+                                <td>
+                                    <strong>{{ $catatan->count() }} pelanggaran</strong>
+                                    <small class="text-secondary d-block">{{ $kategoriRingkas->join(' · ') }}</small>
+                                </td>
+                                <td>{{ $catatan->sum('poin_pelanggaran') }}</td>
                             </tr>
                         @empty
                             <tr><td colspan="4" class="kosong">Belum ada pelanggaran.</td></tr>

@@ -46,6 +46,8 @@ class TazirController extends Controller
 
     public function edit(Tazir $tazir)
     {
+        abort_unless(request()->user()?->admin(), 403, 'Hanya admin yang dapat mengubah data ta\'zir.');
+
         $pelanggaran = Pelanggaran::with(['santri', 'kategori'])->orderByDesc('tanggal_pelanggaran')->get();
 
         return view('tazir.form', compact('tazir', 'pelanggaran'));
@@ -53,6 +55,8 @@ class TazirController extends Controller
 
     public function update(Request $request, Tazir $tazir)
     {
+        abort_unless($request->user()?->admin(), 403, 'Hanya admin yang dapat mengubah data ta\'zir.');
+
         $tazir->update($this->validasi($request));
 
         return redirect()->route('tazir.index')->with('sukses', 'Data ta\'zir berhasil diperbarui.');

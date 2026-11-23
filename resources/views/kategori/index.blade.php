@@ -5,7 +5,13 @@
 
 @section('aksi')
     @if(auth()->user()->admin())
-        <a class="btn-hijau" href="{{ route('kategori.create') }}"><i class="bi bi-plus-lg"></i> Tambah kategori</a>
+        <a class="btn-hijau" href="{{ route('kategori.import.form') }}">
+            <i class="bi bi-file-earmark-excel"></i> Import Excel
+        </a>
+
+        <a class="btn-hijau" href="{{ route('kategori.create') }}">
+            <i class="bi bi-plus-lg"></i> Tambah Kode Pelanggaran
+        </a>
     @endif
 @endsection
 

@@ -66,14 +66,46 @@ class SantriController extends Controller
     }
 
     public function destroy(Santri $santri)
-    {
-        if ($santri->pelanggaran()->exists() || $santri->suratPeringatan()->exists() || $santri->notifikasi()->exists()) {
-            return back()->with('gagal', 'Santri masih memiliki pelanggaran, surat, atau notifikasi.');
-        }
-        $santri->delete();
-
-        return redirect()->route('santri.index')->with('sukses', 'Data santri berhasil dihapus.');
+    
+{
+    // Jangan hapus santri jika masih memiliki riwayat pelanggaran
+    if ($santri->pelanggaran()->exists()) {
+        return back()->with(
+            'gagal',
+            'Santri masih memiliki riwayat pelanggaran. Hapus atau arsipkan riwayatnya terlebih dahulu.'
+        );
     }
+
+    // Jangan hapus santri jika masih memiliki surat peringatan
+    if ($santri->suratPeringatan()->exists()) {
+        return back()->with(
+            'gagal',
+            'Santri masih memiliki surat peringatan. Hapus atau arsipkan suratnya terlebih dahulu.'
+        );
+    }
+
+    try {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($santri) {
+            // Hapus notifikasi milik santri ini saja
+            $santri->notifikasi()->delete();
+
+            // Hapus data santri
+            $santri->delete();
+        });
+
+        return redirect()->route('santri.index')->with(
+            'sukses',
+            'Data santri dan notifikasi terkait berhasil dihapus.'
+        );
+
+    } catch (\Throwable $e) {
+        return back()->with(
+            'gagal',
+            'Data santri gagal dihapus: ' . $e->getMessage()
+        );
+    }
+}
+
 
     private function validasi(Request $request, ?Santri $santri = null): array
     {

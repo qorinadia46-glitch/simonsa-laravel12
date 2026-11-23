@@ -59,8 +59,14 @@ class BackupController extends Controller
 
         $berkas = $request->file('berkas');
         $ext = strtolower($berkas->getClientOriginalExtension());
-        if (! in_array($ext, ['sqlite', 'db'], true)) {
-            return back()->with('gagal', 'Pulihkan hanya menerima berkas backup .sqlite.');
+        $ekstensiValid = \DB::getDriverName() === 'sqlite'
+            ? ['sqlite', 'db']
+            : ['sql'];
+        if (! in_array($ext, $ekstensiValid, true)) {
+            $pesan = \DB::getDriverName() === 'sqlite'
+                ? 'Pulihkan hanya menerima berkas backup .sqlite.'
+                : 'Pulihkan hanya menerima berkas backup .sql.';
+            return back()->with('gagal', $pesan);
         }
 
         $sumber = $berkas->getRealPath();

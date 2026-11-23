@@ -15,10 +15,18 @@ class PelanggaranController extends Controller
     public function index(Request $request, RekapService $rekap)
     {
         $filter = $request->only(['q', 'id_kategori', 'kelas', 'dari', 'sampai']);
-        $data = $rekap->query($filter)
-            ->with(['santri', 'kategori', 'pengguna'])
-            ->orderByDesc('tanggal_pelanggaran')
-            ->orderByDesc('id_pelanggaran')
+        $data = Santri::query()
+            ->whereIn('id_santri', $rekap->query($filter)
+                ->select('pelanggaran.id_santri')
+                ->distinct())
+            ->with(['pelanggaran' => function ($query) use ($filter, $rekap) {
+                $query->whereIn('id_pelanggaran', $rekap->query($filter)
+                    ->select('pelanggaran.id_pelanggaran'))
+                    ->with(['kategori', 'pengguna'])
+                    ->orderByDesc('tanggal_pelanggaran')
+                    ->orderByDesc('id_pelanggaran');
+            }])
+            ->orderBy('nama_santri')
             ->paginate(10)
             ->withQueryString();
 

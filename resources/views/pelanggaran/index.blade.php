@@ -11,60 +11,67 @@
 
 @section('content')
     <form class="kartu kartu-isi filter mb-3 no-print" method="GET">
-        <input class="form-control" name="q" value="{{ $filter['q'] ?? '' }}" placeholder="Nama, NIS, atau kronologi">
-        <select class="form-select" name="id_kategori">
-            <option value="">Semua kategori</option>
-            @foreach($kategori as $item)
-                <option value="{{ $item->id_kategori }}" @selected(($filter['id_kategori'] ?? '') == $item->id_kategori)>{{ $item->nama_pelanggaran }}</option>
-            @endforeach
-        </select>
-        <select class="form-select" name="kelas">
-            <option value="">Semua kelas</option>
-            @foreach($kelas as $item)
-                <option value="{{ $item }}" @selected(($filter['kelas'] ?? '') === $item)>{{ $item }}</option>
-            @endforeach
-        </select>
-        <input class="form-control" type="date" name="dari" value="{{ $filter['dari'] ?? '' }}">
-        <input class="form-control" type="date" name="sampai" value="{{ $filter['sampai'] ?? '' }}">
-        <button class="btn-hijau" type="submit">Saring</button>
+    <input
+        class="form-control"
+        name="q"
+        value="{{ $filter['q'] ?? '' }}"
+        placeholder="Cari nama, atau NIS."
+    >
+
+    <button class="btn-hijau" type="submit">
+        <i class="bi bi-search"></i> Cari
+    </button>
     </form>
     <div class="kartu">
         <div class="table-responsive">
             <table class="table tabel-santri">
-                <thead><tr><th class="kolom-no">No</th><th>Tanggal</th><th>Santri</th><th>Kategori</th><th>Poin</th><th>Petugas</th><th></th></tr></thead>
+                <thead><tr><th class="kolom-no">No</th><th>Santri</th><th>Daftar pelanggaran</th></tr></thead>
                 <tbody>
                 @forelse($data as $item)
-                    @php $warna = $item->poin_pelanggaran >= 25 ? 'sp3' : ($item->poin_pelanggaran >= 10 ? 'sp1' : 'aman'); @endphp
                     <tr>
                         <td class="kolom-no">{{ $data->firstItem() + $loop->index }}</td>
-                        <td>{{ $item->tanggal_pelanggaran->translatedFormat('d M Y') }}</td>
                         <td>
-                            <a class="orang" href="{{ route('santri.show', $item->santri) }}">
-                                <span class="inisial kecil">{{ strtoupper(mb_substr($item->santri->nama_santri, 0, 1)) }}</span>
+                            <a class="orang" href="{{ route('santri.show', $item) }}">
+                                <span class="inisial kecil">{{ strtoupper(mb_substr($item->nama_santri, 0, 1)) }}</span>
                                 <span>
-                                    <strong>{{ $item->santri->nama_santri }}</strong>
-                                    <small>{{ $item->santri->nis }} · {{ $item->santri->kelas }}</small>
+                                    <strong>{{ $item->nama_santri }}</strong>
+                                    <small>{{ $item->nis }} · {{ $item->kelas }}</small>
                                 </span>
                             </a>
                         </td>
-                        <td>{{ $item->kategori->nama_pelanggaran }}</td>
-                        <td><b class="poin-angka {{ $warna }}">{{ $item->poin_pelanggaran }}</b></td>
-                        <td>{{ $item->pengguna->nama_user }}</td>
-                        <td class="aksi-baris">
-                            <a class="btn-sm-aksi" href="{{ route('pelanggaran.show', $item) }}">Detail</a>
-                            @if(auth()->user()->petugas())
-                                <a class="btn-sm-aksi" href="{{ route('pelanggaran.edit', $item) }}">Ubah</a>
-                            @endif
-                            @if(auth()->user()->admin())
-                                <form method="POST" action="{{ route('pelanggaran.destroy', $item) }}">
-                                    @csrf @method('DELETE')
-                                    <button class="btn-sm-aksi bahaya" type="submit">Hapus</button>
-                                </form>
-                            @endif
+                        <td class="daftar-pelanggaran-cell">
+                            <table class="daftar-pelanggaran">
+                                <thead>
+                                    <tr><th>Tanggal</th><th>Kategori</th><th>Poin</th><th>Petugas</th><th>Aksi</th></tr>
+                                </thead>
+                                <tbody>
+                                @foreach($item->pelanggaran as $pelanggaran)
+                                    @php $warna = $pelanggaran->poin_pelanggaran >= 25 ? 'sp3' : ($pelanggaran->poin_pelanggaran >= 10 ? 'sp1' : 'aman'); @endphp
+                                    <tr>
+                                        <td>{{ $pelanggaran->tanggal_pelanggaran->translatedFormat('d M Y') }}</td>
+                                        <td>{{ $pelanggaran->kategori->nama_pelanggaran }}</td>
+                                        <td><b class="poin-angka {{ $warna }}">{{ $pelanggaran->poin_pelanggaran }}</b></td>
+                                        <td>{{ $pelanggaran->pengguna?->nama_user ?? '-' }}</td>
+                                        <td class="aksi-baris">
+                                            <a class="btn-sm-aksi" href="{{ route('pelanggaran.show', $pelanggaran) }}">Detail</a>
+                                            @if(auth()->user()->admin())
+                                                <a class="btn-sm-aksi" href="{{ route('pelanggaran.edit', $pelanggaran) }}">Ubah</a>
+                                            @endif
+                                            @if(auth()->user()->admin())
+                                                <form method="POST" action="{{ route('pelanggaran.destroy', $pelanggaran) }}">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn-sm-aksi bahaya" type="submit">Hapus</button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="kosong">Belum ada pelanggaran.</td></tr>
+                    <tr><td colspan="3" class="kosong">Belum ada pelanggaran.</td></tr>
                 @endforelse
                 </tbody>
             </table>

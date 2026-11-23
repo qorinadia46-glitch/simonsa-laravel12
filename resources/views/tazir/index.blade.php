@@ -43,8 +43,8 @@
                         <td>{{ $item->tanggal_pelaksanaan?->translatedFormat('d M Y') ?: '-' }}</td>
                         <td><span class="lencana {{ $item->status_pelaksanaan }}">{{ $item->labelStatus() }}</span></td>
                         <td class="aksi-baris">
-                            <a class="btn-sm-aksi" href="{{ route('tazir.edit', $item) }}">Ubah</a>
                             @if(auth()->user()->admin())
+                                <a class="btn-sm-aksi" href="{{ route('tazir.edit', $item) }}">Ubah</a>
                                 <form method="POST" action="{{ route('tazir.destroy', $item) }}">
                                     @csrf @method('DELETE')
                                     <button class="btn-sm-aksi bahaya" type="submit">Hapus</button>

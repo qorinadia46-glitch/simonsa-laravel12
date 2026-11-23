@@ -15,7 +15,18 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label" for="nis">NIS</label>
-                        <input class="form-control" id="nis" name="nis" value="{{ old('nis', $santri->nis ?? '') }}" required maxlength="20">
+                        <input
+    type="text"
+    class="form-control"
+    id="nis"
+    name="nis"
+    value="{{ old('nis', $santri->nis ?? '') }}"
+    inputmode="numeric"
+    pattern="[0-9]+"
+    maxlength="20"
+    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+    required
+>
                     </div>
                     <div class="col-md-8">
                         <label class="form-label" for="nama_santri">Nama santri</label>

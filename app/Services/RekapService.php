@@ -57,7 +57,8 @@ class RekapService
                 ->orderByDesc('tanggal_pelanggaran')
                 ->orderByDesc('id_pelanggaran')
                 ->limit(6)
-                ->get(),
+                ->get()
+                ->groupBy('id_santri'),
             'labelBulan' => $chart['labelBulan'],
             'nilaiBulan' => $chart['nilaiBulan'],
             'labelKategori' => $chart['labelKategori'],

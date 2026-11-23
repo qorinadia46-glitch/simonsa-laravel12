@@ -57,13 +57,14 @@ class BackupService
             return null;
         }
 
-        $nama = 'simonsa-'.now()->format('Ymd-His').'.sqlite';
+        $ekstensi = DB::getDriverName() === 'sqlite' ? 'sqlite' : 'sql';
+        $nama = 'simonsa-'.now()->format('Ymd-His').'.'.$ekstensi;
         $keterangan = $jenis === 'otomatis'
             ? 'Backup otomatis harian.'
             : 'Backup manual oleh '.$pelaksana->nama_user.'.';
 
         try {
-            $path = $this->salinSqlite($nama);
+            $path = $this->salinDatabase($nama);
             $log = LogBackup::create([
                 'id_user' => $pelaksana->id_user,
                 'nama_file' => $nama,
@@ -90,19 +91,25 @@ class BackupService
 
     public function pulihkan(string $sumber): void
     {
-        $nama = 'simonsa-sebelum-pulih-'.now()->format('Ymd-His').'.sqlite';
-        $this->salinSqlite($nama);
-        $ukuran = filesize(storage_path('app/backups/'.$nama)) ?: 0;
+        $driver = DB::getDriverName();
+        $ekstensi = $driver === 'sqlite' ? 'sqlite' : 'sql';
+        $nama = 'simonsa-sebelum-pulih-'.now()->format('Ymd-His').'.'.$ekstensi;
+        $salinan = $this->salinDatabase($nama);
+        $ukuran = filesize($salinan) ?: 0;
 
-        DB::disconnect('sqlite');
-        DB::purge('sqlite');
+        if ($driver === 'sqlite') {
+            DB::disconnect('sqlite');
+            DB::purge('sqlite');
 
-        if (! @copy($sumber, $this->berkasSqlite())) {
+            if (! @copy($sumber, $this->berkasSqlite())) {
+                DB::reconnect('sqlite');
+                throw new \RuntimeException('Berkas database sedang dipakai. Tutup program lain lalu coba lagi.');
+            }
+
             DB::reconnect('sqlite');
-            throw new \RuntimeException('Berkas database sedang dipakai. Tutup program lain lalu coba lagi.');
+        } else {
+            $this->jalankanSqlPemulihan($sumber);
         }
-
-        DB::reconnect('sqlite');
 
         $admin = Pengguna::where('role', 'admin')->orderBy('id_user')->first();
         if ($admin) {
@@ -129,6 +136,10 @@ class BackupService
 
     public function sql(): string
     {
+        if (DB::getDriverName() !== 'sqlite') {
+            return $this->sqlDatabaseMySql();
+        }
+
         $tabel = [
             'pengguna',
             'santri',
@@ -163,7 +174,7 @@ class BackupService
         return $sql;
     }
 
-    private function salinSqlite(string $nama): string
+    private function salinDatabase(string $nama): string
     {
         $dir = storage_path('app/backups');
         if (! is_dir($dir)) {
@@ -171,6 +182,12 @@ class BackupService
         }
 
         $tujuan = $dir.DIRECTORY_SEPARATOR.$nama;
+
+        if (DB::getDriverName() !== 'sqlite') {
+            file_put_contents($tujuan, $this->sqlDatabaseMySql());
+            return $tujuan;
+        }
+
         $kutip = DB::connection()->getPdo()->quote(str_replace('\\', '/', $tujuan));
 
         try {
@@ -192,5 +209,68 @@ class BackupService
         }
 
         return $path;
+    }
+
+    private function sqlDatabaseMySql(): string
+    {
+        $sql = "-- SIMONSA MySQL Backup\n-- ".now()->format('Y-m-d H:i:s')." WIB\n";
+        $sql .= "SET FOREIGN_KEY_CHECKS=0;\n";
+
+        $daftar = DB::select('SHOW FULL TABLES');
+        foreach ($daftar as $row) {
+            $nilai = array_values((array) $row);
+            $nama = (string) $nilai[0];
+            $tipe = (string) ($nilai[1] ?? '');
+            if ($tipe !== '' && ! str_contains(strtoupper($tipe), 'BASE')) {
+                continue;
+            }
+
+            $namaTerkutip = '`'.str_replace('`', '``', $nama).'`';
+            $struktur = DB::selectOne('SHOW CREATE TABLE '.$namaTerkutip);
+            $dataStruktur = (array) $struktur;
+            $create = (string) ($dataStruktur['Create Table'] ?? '');
+            if ($create !== '') {
+                $sql .= 'DROP TABLE IF EXISTS '.$namaTerkutip.";\n";
+                $sql .= preg_replace('/\s+/', ' ', $create).";\n";
+            }
+
+            foreach (DB::table($nama)->get() as $rowData) {
+                $data = (array) $rowData;
+                $kolom = array_map(
+                    fn (string $kolom) => '`'.str_replace('`', '``', $kolom).'`',
+                    array_keys($data)
+                );
+                $nilai = array_map(function ($nilai) {
+                    if ($nilai === null) {
+                        return 'NULL';
+                    }
+                    return "'".str_replace(["\\", "'"], ["\\\\", "''"], (string) $nilai)."'";
+                }, array_values($data));
+                $sql .= 'INSERT INTO '.$namaTerkutip.' ('.implode(', ', $kolom).') VALUES ('.implode(', ', $nilai).");\n";
+            }
+        }
+
+        $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
+        return $sql;
+    }
+
+    private function jalankanSqlPemulihan(string $sumber): void
+    {
+        $sql = @file_get_contents($sumber);
+        if ($sql === false || trim($sql) === '') {
+            throw new \RuntimeException('Berkas backup SQL tidak dapat dibaca.');
+        }
+
+        $pdo = DB::connection()->getPdo();
+        foreach (preg_split('/\r\n|\r|\n/', $sql) as $baris) {
+            $baris = trim($baris);
+            if ($baris === '' || str_starts_with($baris, '--')) {
+                continue;
+            }
+            if (! str_ends_with($baris, ';')) {
+                continue;
+            }
+            $pdo->exec($baris);
+        }
     }
 }
