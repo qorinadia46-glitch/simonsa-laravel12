@@ -9,7 +9,7 @@
         $idSantri = old('id_santri', $pelanggaran->id_santri ?? '');
         $santriTerpilih = $santri->firstWhere('id_santri', $idSantri);
     @endphp
-    <form class="kartu kartu-isi" method="POST" action="{{ $ubah ? route('pelanggaran.update', $pelanggaran) : route('pelanggaran.store') }}">
+    <form class="kartu kartu-isi" method="POST" action="{{ $ubah ? route('pelanggaran.update', $pelanggaran) : route('pelanggaran.store') }}" enctype="multipart/form-data">
         @csrf
         @if($ubah) @method('PUT') @endif
         <div class="row g-3">
@@ -75,6 +75,17 @@
             <div class="col-12">
                 <label class="form-label">Tindak lanjut</label>
                 <textarea class="form-control" name="tindak_lanjut" rows="3">{{ old('tindak_lanjut', $pelanggaran->tindak_lanjut ?? '') }}</textarea>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Foto bukti pelanggaran</label>
+                <input class="form-control" type="file" name="bukti_foto" accept="image/jpeg,image/png,image/webp">
+                <small class="text-secondary">Format JPG, PNG, atau WEBP. Maksimal 5 MB.</small>
+                @if($ubah && $pelanggaran->bukti_foto)
+                    <div class="mt-2">
+                        <span class="d-block mb-1 text-secondary">Foto saat ini:</span>
+                        <img src="{{ asset('storage/'.$pelanggaran->bukti_foto) }}" alt="Bukti pelanggaran" style="max-height:220px; max-width:100%; border-radius:8px;">
+                    </div>
+                @endif
             </div>
         </div>
         <div class="mt-3 d-flex gap-2">

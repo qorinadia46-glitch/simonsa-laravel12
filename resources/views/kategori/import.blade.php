@@ -12,10 +12,15 @@
         pelanggaran untuk dimasukkan ke database SIMONSA.
     </p>
 
-    <div class="alert alert-info">
-        Format kolom Excel:
-        kode_pelanggaran, nama_pelanggaran,
-        deskripsi, poin, status.
+    <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <strong>Format kolom Excel:</strong>
+            <div>kode_pelanggaran, nama_pelanggaran, deskripsi, poin, status.</div>
+            <small>Isi data mulai baris kedua tanpa mengubah judul kolom. Kode, nama, dan poin wajib diisi; status dapat berupa aktif atau nonaktif.</small>
+        </div>
+        <a href="{{ route('kategori.import.template', [], false) }}" class="btn-hijau">
+            <i class="bi bi-download"></i> Unduh template Excel
+        </a>
     </div>
 
     @if ($errors->any())

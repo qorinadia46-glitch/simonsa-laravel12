@@ -59,6 +59,8 @@ Route::middleware(['auth', 'aktif'])->group(function () {
         // Import Kategori Pelanggaran Excel
         Route::get('/kategori/import', [ImportKategoriController::class, 'form'])
             ->name('kategori.import.form');
+        Route::get('/kategori/import/template', [ImportKategoriController::class, 'template'])
+            ->name('kategori.import.template');
         Route::post('/kategori/import', [ImportKategoriController::class, 'import'])
             ->name('kategori.import.proses');
         Route::get('/pengguna/tambah', [PenggunaController::class, 'create'])->name('pengguna.create');

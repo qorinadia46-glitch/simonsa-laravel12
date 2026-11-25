@@ -9,6 +9,7 @@ use App\Services\PoinService;
 use App\Services\RekapService;
 use App\Support\Validasi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PelanggaranController extends Controller
 {
@@ -61,6 +62,10 @@ class PelanggaranController extends Controller
     public function store(Request $request)
     {
         $data = $this->validasi($request, true);
+        $foto = $request->file('bukti_foto');
+        if ($foto) {
+            $data['bukti_foto'] = $foto->store('bukti-pelanggaran', 'public');
+        }
         $hasil = PoinService::catat($data, $request->user());
 
         return $this->setelahSimpan($hasil, 'Pelanggaran berhasil dicatat.');
@@ -85,7 +90,15 @@ class PelanggaranController extends Controller
     public function update(Request $request, Pelanggaran $pelanggaran)
     {
         $data = $this->validasi($request, false);
+        $foto = $request->file('bukti_foto');
+        $fotoLama = $pelanggaran->bukti_foto;
+        if ($foto) {
+            $data['bukti_foto'] = $foto->store('bukti-pelanggaran', 'public');
+        }
         $hasil = PoinService::perbarui($pelanggaran, $data);
+        if ($foto && $fotoLama) {
+            Storage::disk('public')->delete($fotoLama);
+        }
 
         return $this->setelahSimpan($hasil, 'Pelanggaran berhasil diperbarui.');
     }
@@ -94,6 +107,9 @@ class PelanggaranController extends Controller
     {
         if ($pelanggaran->tazir()->exists()) {
             return back()->with('gagal', 'Hapus data ta\'zir yang terkait terlebih dahulu.');
+        }
+        if ($pelanggaran->bukti_foto) {
+            Storage::disk('public')->delete($pelanggaran->bukti_foto);
         }
         $pelanggaran->delete();
 
@@ -108,6 +124,7 @@ class PelanggaranController extends Controller
             'tanggal_pelanggaran' => ['required', 'date', 'before_or_equal:today'],
             'kronologi' => ['required', 'string'],
             'tindak_lanjut' => ['nullable', 'string'],
+            'bukti_foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ], Validasi::pesan(), [
             'id_santri' => 'santri',
             'id_kategori' => 'kategori',

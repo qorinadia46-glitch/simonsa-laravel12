@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\KategoriImport;
+use App\Exports\TemplateKategoriExport;
 use Throwable;
 
 class ImportKategoriController extends Controller
@@ -12,6 +13,14 @@ class ImportKategoriController extends Controller
     public function form()
     {
         return view('kategori.import');
+    }
+
+    public function template()
+    {
+        return Excel::download(
+            new TemplateKategoriExport(),
+            'template-kategori-pelanggaran.xlsx'
+        );
     }
 
     public function import(Request $request)

@@ -70,6 +70,19 @@
         <div class="kartu-isi"><p class="mb-0">{{ $pelanggaran->tindak_lanjut ?: 'Belum ada tindak lanjut.' }}</p></div>
     </div>
 
+    <div class="kartu mb-3">
+        <div class="judul-bagian"><strong><i class="bi bi-camera"></i> Foto bukti pelanggaran</strong></div>
+        <div class="kartu-isi">
+            @if($pelanggaran->bukti_foto)
+                <a href="{{ asset('storage/'.$pelanggaran->bukti_foto) }}" target="_blank" rel="noopener">
+                    <img src="{{ asset('storage/'.$pelanggaran->bukti_foto) }}" alt="Bukti pelanggaran" style="max-height:420px; max-width:100%; object-fit:contain; border-radius:8px;">
+                </a>
+            @else
+                <div class="kosong">Belum ada foto bukti pelanggaran.</div>
+            @endif
+        </div>
+    </div>
+
     <div class="kartu">
         <div class="judul-bagian">
             <strong><i class="bi bi-exclamation-diamond"></i> Ta'zir</strong>

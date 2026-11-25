@@ -87,6 +87,7 @@ class PoinService
                 'kronologi' => $data['kronologi'],
                 'poin_pelanggaran' => $kategori->poin,
                 'tindak_lanjut' => $data['tindak_lanjut'] ?? null,
+                'bukti_foto' => $data['bukti_foto'] ?? null,
                 'created_at' => $saat,
             ]);
 
@@ -124,6 +125,7 @@ class PoinService
                 'kronologi' => $data['kronologi'],
                 'poin_pelanggaran' => $kategori->poin,
                 'tindak_lanjut' => $data['tindak_lanjut'] ?? null,
+                'bukti_foto' => $data['bukti_foto'] ?? $pelanggaran->bukti_foto,
             ])->save();
 
             $sesudah = $totalSebelum + $kategori->poin;

@@ -20,9 +20,9 @@
             <div>Unduh template, isi data mulai baris kedua tanpa mengubah judul kolom.</div>
             <small>NIS, nama santri, dan jenis kelamin wajib diisi (Laki-laki/Perempuan).</small>
         </div>
-        <a href="{{ route('santri.import.template', [], false) }}" class="btn btn-outline-success">
+        <a href="{{ route('santri.import.template', [], false) }}" class="btn-hijau">
             <i class="bi bi-download"></i>
-            Unduh Template Excel
+            Unduh template Excel
         </a>
     </div>
 

@@ -25,6 +25,7 @@ class Pelanggaran extends Model
         'kronologi',
         'poin_pelanggaran',
         'tindak_lanjut',
+        'bukti_foto',
         'created_at',
     ];
 
